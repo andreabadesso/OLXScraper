@@ -1,0 +1,15 @@
+{
+  "name": "node-olx-scraper",
+  "version": "0.0.1",
+  "description": "Scraping OLX.",
+  "main": "server.js",
+  "author": "André Abadesso",
+  "dependencies": {
+    "cheerio": "latest",
+    "date-utils": "^1.2.16",
+    "express": "latest",
+    "moment": "^2.7.0",
+    "mongoose-text-search": "0.0.2",
+    "request": "latest"
+  }
+}
