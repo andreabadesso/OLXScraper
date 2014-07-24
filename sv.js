@@ -27,9 +27,9 @@ app.use(function(req, res, next) {
     }
 });
 
-
 // Routes:
-app.get('/ofertas/:nome/:periodo', ofertas.findAll);
+// app.get('/ofertas/:nome/:periodo', ofertas.findAll);
+app.get('/ofertas/:nome/:cidade', ofertas.findNome);
 app.get('/', ofertas.index);
 
 app.listen(3000);

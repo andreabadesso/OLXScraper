@@ -2,31 +2,38 @@
 var fs = require('fs');
 var request = require('request');
 var cheerio = require('cheerio');
+var async = require('async');
 var mongoose = require('mongoose');
 var date = require('date-utils');
 
 var url = 'mongodb://127.0.0.1:27017/olx-teste';
 mongoose.connect(url);
-// mongoose.set('debug', true);
-// mongoose.connection.on('error', function(err) {
-//     console.log(err);
-// });
+mongoose.set('debug', true);
+mongoose.connection.on('error', function(err) {
+    console.log(err);
+});
+
 var OfertaScheme = mongoose.Schema({
     titulo: String,
     preco: Number,
     categoria: String,
-    data: Date
+    data: Date,
+    url: String,
+    imagem: String
 });
 
 var Oferta = mongoose.model('Oferta', OfertaScheme);
 
+var fila = [];
+
 // Celulares e tabets:
-// http://riodejaneiro.olx.com.br/celulares-tablets-cat-830
-for (var i = 1; i < 728; i++) {
-    //url = 'http://www.olx.com.br/celulares-smartphones-cat-831-p-' + i;
+for (var i = 1; i < 5; i++) {
     url = "http://riodejaneiro.olx.com.br/celulares-tablets-cat-830-p-" + i;
-    baixarPagina(i, url);
+    fila.push(baixarPagina(i, url));
+    // baixarPagina(i, url);
 }
+
+async.series(fila);
 
 function baixarPagina(pagina, url) {
     request(url, function(error, response, html) {
@@ -35,8 +42,14 @@ function baixarPagina(pagina, url) {
             var produtos = [];
 
             $('.row').filter(function() {
+
                 var data = $(this);
                 var json = {};
+
+                json.imagem = data.find('img')[0].attribs.src;
+                json.url = data.find('img')[0].parent.attribs.href;
+                console.log(json.imagem);
+
                 json.titulo = data.attr("title").trim();
 
                 json.preco = data.find(".third-column-container").text().replace("Topa negociar", "").trim();
@@ -49,6 +62,7 @@ function baixarPagina(pagina, url) {
                 if (json.preco === "undefined" || json.preco === undefined || json.preco === null) {
                     return null;
                 }
+
                 var meses = [];
                 meses["Jan"] = "01";
                 meses["Fev"] = "02";
