@@ -27,8 +27,9 @@ var Oferta = mongoose.model('Oferta', OfertaScheme);
 var fila = [];
 
 // Celulares e tabets:
-for (var i = 1; i < 5; i++) {
+for (var i = 100; i < 200; i++) {
     url = "http://riodejaneiro.olx.com.br/celulares-tablets-cat-830-p-" + i;
+    console.log("Adicionando pagina a fila: " + url);
     fila.push(baixarPagina(i, url));
     // baixarPagina(i, url);
 }
@@ -36,77 +37,85 @@ for (var i = 1; i < 5; i++) {
 async.series(fila);
 
 function baixarPagina(pagina, url) {
-    request(url, function(error, response, html) {
-        if (!error) {
-            var $ = cheerio.load(html);
-            var produtos = [];
+    setTimeout(function() {
 
-            $('.row').filter(function() {
+        request(url, function(error, response, html) {
+            if (!error) {
+                var $ = cheerio.load(html);
+                var produtos = [];
 
-                var data = $(this);
-                var json = {};
+                $('.row').filter(function() {
 
-                json.imagem = data.find('img')[0].attribs.src;
-                json.url = data.find('img')[0].parent.attribs.href;
-                console.log(json.imagem);
+                    var data = $(this);
+                    var json = {};
 
-                json.titulo = data.attr("title").trim();
+                    json.imagem = data.find('img')[0].attribs.src;
+                    json.url = data.find('img')[0].parent.attribs.href;
 
-                json.preco = data.find(".third-column-container").text().replace("Topa negociar", "").trim();
-                json.preco = json.preco.split(" ")[1];
+                    var u = data.find('a')[0].attribs;
+                    json.url = u.href;
+                    json.titulo = u.title;
 
-                json.categoria = data.find(".itemlistinginfo").text().split("|")[0].trim();
+                    json.preco = data.find(".third-column-container").text().replace("Topa negociar", "").trim();
+                    json.preco = json.preco.split(" ")[1];
 
-                json.data = data.find(".fourth-column-container").text().trim();
+                    json.categoria = data.find(".itemlistinginfo").text().split("|")[0].trim();
 
-                if (json.preco === "undefined" || json.preco === undefined || json.preco === null) {
-                    return null;
-                }
+                    json.data = data.find(".fourth-column-container").text().trim();
 
-                var meses = [];
-                meses["Jan"] = "01";
-                meses["Fev"] = "02";
-                meses["Mar"] = "03";
-                meses["Abr"] = "04";
-                meses["Mai"] = "05";
-                meses["Jun"] = "06";
-                meses["Jul"] = "07";
-                meses["Ago"] = "08";
-                meses["Set"] = "09";
-                meses["Out"] = "10";
-                meses["Nov"] = "11";
-                meses["Dez"] = "12";
+                    if (json.preco === "undefined" || json.preco === undefined || json.preco === null) {
+                        return null;
+                    }
 
-                var d = json.data.split(" ");
-                data = d[0].replace(",", "");
+                    var meses = [];
+                    meses["Jan"] = "01";
+                    meses["Fev"] = "02";
+                    meses["Mar"] = "03";
+                    meses["Abr"] = "04";
+                    meses["Mai"] = "05";
+                    meses["Jun"] = "06";
+                    meses["Jul"] = "07";
+                    meses["Ago"] = "08";
+                    meses["Set"] = "09";
+                    meses["Out"] = "10";
+                    meses["Nov"] = "11";
+                    meses["Dez"] = "12";
 
-                if (data === "Hoje") {
-                    data = Date.today();
-                } else if (data === "Ontem") {
-                    data = Date.yesterday();
-                } else {
-                    data = new Date("2014-" + meses[d[1]] + "-" + d[0]);
-                    console.log(data);
-                }
+                    var d = json.data.split(" ");
+                    data = d[0].replace(",", "");
 
-                json.data = data;
+                    if (data === "Hoje") {
+                        data = Date.today();
+                    } else if (data === "Ontem") {
+                        data = Date.yesterday();
+                    } else {
+                        data = new Date("2014-" + meses[d[1]] + "-" + d[0]);
+                        console.log(data);
+                    }
 
-                json.preco = json.preco.replace(".", "");
-                json.preco = parseFloat(json.preco)
-                // console.log(json.preco);
+                    json.data = data;
 
-                var _oferta = new Oferta({
-                    titulo: json.titulo,
-                    preco: json.preco,
-                    categoria: json.categoria,
-                    data: json.data
-                }).save(function(err) {
-                    if (err)
-                        console.log("ERR");
+                    json.preco = json.preco.replace(".", "");
+                    json.preco = parseFloat(json.preco)
+                    // console.log(json.preco);
+
+                    var _oferta = new Oferta({
+                        titulo: json.titulo,
+                        preco: json.preco,
+                        categoria: json.categoria,
+                        data: json.data,
+                        url: json.url,
+                        imagem: json.imagem
+                    }).save(function(err) {
+                        if (err)
+                            console.log("ERR");
+                        else
+                            console.log(json);
+                    });
+                    // produtos.push(json);
                 });
-                // produtos.push(json);
-            });
-
-        }
-    });
+            }
+        });
+        console.log("Esperando 3 segundos");
+    }, 3000);
 }
