@@ -27,7 +27,7 @@ var Oferta = mongoose.model('Oferta', OfertaScheme);
 var fila = [];
 
 // Celulares e tabets:
-for (var i = 100; i < 200; i++) {
+for (var i = 160; i < 180; i++) {
     url = "http://riodejaneiro.olx.com.br/celulares-tablets-cat-830-p-" + i;
     console.log("Adicionando pagina a fila: " + url);
     fila.push(baixarPagina(i, url));
@@ -40,6 +40,8 @@ function baixarPagina(pagina, url) {
     setTimeout(function() {
 
         request(url, function(error, response, html) {
+		console.log(html === "");
+		return false;
             if (!error) {
                 var $ = cheerio.load(html);
                 var produtos = [];
