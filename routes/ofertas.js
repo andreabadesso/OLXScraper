@@ -8,7 +8,7 @@ var mongoose = require('mongoose'),
 
 function pegarOfertas(nome, date, callback) {
     date = moment();
-    date = date.subtract(10);
+    // date = date.subtract(10);
 
     console.log("Buscando por: " + nome);
     console.log("Com data maior que: " + date.format('L'));
