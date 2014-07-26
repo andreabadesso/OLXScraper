@@ -7,14 +7,14 @@ var mongoose = require('mongoose'),
 // mongoose.set('debug', true);
 
 function pegarOfertas(nome, date, callback) {
-    console.log("Buscando por: " + nome);
-    console.log("Com data maior que: " + date.format('L'));
+    // console.log("Buscando por: " + nome);
+    // console.log("Com data maior que: " + date.format('L'));
 
     var less = moment(date).add(3, 'days');
     var gte = moment(date).subtract(3, 'days');
 
-    console.log("LESS: " + less);
-    console.log("GTE: " + gte);
+    // console.log("LESS: " + less);
+    // console.log("GTE: " + gte);
 
     Oferta.find({
         titulo: {
@@ -38,7 +38,7 @@ function pegarOfertas(nome, date, callback) {
             media_inicial += preco;
         });
 
-        console.log("Soma total: " + media_inicial);
+        // console.log("Soma total: " + media_inicial);
 
         precos = _.sortBy(precos, function(num) {
             return num;

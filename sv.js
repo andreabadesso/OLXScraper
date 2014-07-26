@@ -5,7 +5,7 @@ var mongoose = require('mongoose'),
 
 var url = 'mongodb://127.0.0.1:27017/olx';
 mongoose.connect(url);
-mongoose.set('debug', true);
+// mongoose.set('debug', true);
 mongoose.connection.on('error', function(err) {
     console.log(err);
 });
