@@ -6,7 +6,7 @@ var mongoose = require('mongoose'),
     async = require('async');
 
 var options = {
-    ttl: 24 * 60, // Cache de um dia.
+    ttl: 24 * 60 * 60, // Cache de um dia.
     engine: 'redis',
     port: 6379,
     host: '127.0.0.1'
@@ -69,7 +69,10 @@ function pegarOfertas(nome, date, callback) {
             }) / precos.length).toFixed(2);
         }
 
-        callback(total);
+        callback({
+            preco: total,
+            data: date
+        });
     });
 }
 
@@ -78,38 +81,28 @@ function pegarOfertas(nome, date, callback) {
  * as executa uma atrás da outra
  */
 function calcularDias(nome, numero, cb) {
-    var fila = [
 
-        function(callback) {
-            var dados = {
-                list: [],
-                data: moment().subtract(numero, 'day')
-            };
-            callback(null, dados);
-        }
-    ];
-
+    var inicial = moment();
+    var dias = [];
     for (var i = 0; i < numero; i++) {
-
-        var f = function(dados, callback) {
-            dados.data = dados.data.add(1, 'day');
-            pegarOfertas(nome, dados.data, function(val) {
-
-                var dado = {
-                    preco: val,
-                    data: dados.data.format('L')
-                };
-
-                dados.list.push(dado);
-                callback(null, dados);
-            });
-        };
-
-        fila.push(f);
+        var dia = inicial.subtract(1, 'day');
+        dias.push(
+            dia.format('L')
+        );
     }
 
-    async.waterfall(fila, function(error, result) {
-        cb(result.list);
+    var days = _.map(dias, function(dia) {
+        return function(callback) {
+            setTimeout(function() {
+                pegarOfertas(nome, dia, function(dado) {
+                    callback(null, dado);
+                });
+            }, 200);
+        };
+    });
+
+    async.parallel(days, function(err, results) {
+        cb(results);
     });
 }
 
@@ -117,7 +110,7 @@ exports.findNome = function(req, res) {
     var nome = req.params.nome;
     // Hoje
 
-    cache.get(nome, function(error, value) {
+    cache.get(nome.toLowerCase(), function(error, value) {
         if (error) {
             console.log("ERROR: " + error);
         } else {
@@ -145,7 +138,6 @@ exports.findNome = function(req, res) {
                     },
 
                 ], function(err, results) {
-
                     var ret = {
                         sete: _.filter(results[0], function(r) {
                             return !isNaN(r.preco) && r.preco > 0;
@@ -161,8 +153,8 @@ exports.findNome = function(req, res) {
                     // Retorna dados antes de enviar pro cache:
                     res.send(ret);
 
-                    // Salva dados no cache:
-                    cache.set(nome, ret, function(err, value) {
+                    // Salva dados no cache: 
+                    cache.set(nome.toLowerCase(), ret, function(err, value) {
                         if (err) {
                             console.log(err);
                         }
