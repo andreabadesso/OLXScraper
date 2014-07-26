@@ -7,7 +7,7 @@ var mongoose = require('mongoose'),
 // mongoose.set('debug', true);
 
 function pegarOfertas(nome, date, callback) {
-    date = moment();
+    // date = moment();
     // date = date.subtract(10);
 
     console.log("Buscando por: " + nome);
