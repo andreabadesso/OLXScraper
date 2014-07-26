@@ -2,19 +2,26 @@ var mongoose = require('mongoose'),
     _ = require('underscore')._,
     Oferta = require('../models/oferta.js'),
     moment = require('moment'),
+    Cacheman = require('cacheman'),
     async = require('async');
 
-// mongoose.set('debug', true);
+var options = {
+    ttl: 90,
+    engine: 'redis',
+    port: 6379,
+    host: '127.0.0.1'
+};
 
+var cache = new Cacheman('ofertas', options);
+
+/* Busca no banco produtos com o nome especificado
+ * na data passada e 3 dias antes e 3 dias depois
+ * tirando os 20% maiores e 20% menores preços
+ */
 function pegarOfertas(nome, date, callback) {
-    // console.log("Buscando por: " + nome);
-    // console.log("Com data maior que: " + date.format('L'));
 
     var less = moment(date).add(3, 'days');
     var gte = moment(date).subtract(3, 'days');
-
-    // console.log("LESS: " + less);
-    // console.log("GTE: " + gte);
 
     Oferta.find({
         titulo: {
@@ -26,19 +33,21 @@ function pegarOfertas(nome, date, callback) {
             $gte: gte
         }
     }).exec(function(err, output) {
+        var media_inicial = 0;
 
+        // Mapeia o array para conter apenas preços
         var precos = _.map(output, function(o) {
-            return o.preco;
+            return Number(o.preco);
         });
 
+        var precos = _.filter(precos, function(o) {
+            return !isNaN(o) && o > 0;
+        });
         // console.log(precos);
 
-        var media_inicial = 0;
         _.each(precos, function(preco) {
             media_inicial += preco;
         });
-
-        // console.log("Soma total: " + media_inicial);
 
         precos = _.sortBy(precos, function(num) {
             return num;
@@ -52,18 +61,23 @@ function pegarOfertas(nome, date, callback) {
         precos.splice(0, cut);
 
         var total = 0;
-        _.each(precos, function(preco) {
-            total += preco;
-        });
 
-        total = (total / precos.length).toFixed(2);
-        // console.log("Total: " + total);
+        if (precos.length > 0) {
+            // Calculando a média
+            total = (_.reduce(precos, function(acc, preco) {
+                return acc + preco;
+            }) / precos.length).toFixed(2);
+        }
+
         callback(total);
     });
 }
 
+
+/* Enfilera consultas ao banco e
+ * as executa uma atrás da outra
+ */
 function calcularDias(nome, numero, cb) {
-    // var dados = [];
     var fila = [
 
         function(callback) {
@@ -85,6 +99,7 @@ function calcularDias(nome, numero, cb) {
                     preco: val,
                     data: dados.data.format('L')
                 };
+
                 dados.list.push(dado);
                 callback(null, dados);
             });
@@ -92,43 +107,70 @@ function calcularDias(nome, numero, cb) {
 
         fila.push(f);
     }
+
     async.waterfall(fila, function(error, result) {
         cb(result.list);
     });
 }
 
 exports.findNome = function(req, res) {
+    var nome = req.params.nome;
     // Hoje
 
-    async.parallel([
+    cache.get(nome, function(error, value) {
+        if (error) {
+            console.log("ERROR: " + error);
+        } else {
+            if (value !== undefined && value !== null) {
+                console.log("Está no cache.");
+                res.send(value);
+            } else {
+                console.log("Chave não existe, criando..");
+                async.parallel([
 
-        function(callback) {
-            calcularDias(req.params.nome, 7, function(cb) {
-                callback(null, cb);
-            });
-        },
-        function(callback) {
-            calcularDias(req.params.nome, 15, function(cb) {
-                callback(null, cb);
-            });
-        },
-        function(callback) {
-            calcularDias(req.params.nome, 30, function(cb) {
-                callback(null, cb);
-            });
-        },
+                    function(callback) {
+                        calcularDias(nome, 7, function(cb) {
+                            callback(null, cb);
+                        });
+                    },
+                    function(callback) {
+                        calcularDias(nome, 15, function(cb) {
+                            callback(null, cb);
+                        });
+                    },
+                    function(callback) {
+                        calcularDias(nome, 30, function(cb) {
+                            callback(null, cb);
+                        });
+                    },
 
-    ], function(err, results) {
-        var p = _.pluck(results[0], 'preco');
+                ], function(err, results) {
 
-        res.send({
-            sete: results[0],
-            quinze: results[1],
-            trinta: results[2]
-        });
+                    var ret = {
+                        sete: _.filter(results[0], function(r) {
+                            return !isNaN(r.preco) && r.preco > 0;
+                        }),
+                        quinze: _.filter(results[1], function(r) {
+                            return !isNaN(r.preco) && r.preco > 0;
+                        }),
+                        trinta: _.filter(results[2], function(r) {
+                            return !isNaN(r.preco) && r.preco > 0;
+                        })
+                    };
 
+                    // Retorna dados antes de enviar pro cache:
+                    res.send(ret);
+
+                    // Salva dados no cache:
+                    cache.set(nome, ret, function(err, value) {
+                        if (err) {
+                            console.log(err);
+                        }
+                    });
+                });
+            }
+        }
     });
-
 };
 
 exports.index = function(req, res) {

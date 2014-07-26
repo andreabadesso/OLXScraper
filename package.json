@@ -5,6 +5,9 @@
   "main": "server.js",
   "author": "André Abadesso",
   "dependencies": {
+    "async": "^0.9.0",
+    "cacheman": "^1.0.3",
+    "cacheman-redis": "^0.1.1",
     "cheerio": "latest",
     "date-utils": "^1.2.16",
     "express": "latest",
