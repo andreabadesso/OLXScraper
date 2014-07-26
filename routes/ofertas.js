@@ -6,7 +6,7 @@ var mongoose = require('mongoose'),
     async = require('async');
 
 var options = {
-    ttl: 90,
+    ttl: 24 * 60, // Cache de um dia.
     engine: 'redis',
     port: 6379,
     host: '127.0.0.1'
