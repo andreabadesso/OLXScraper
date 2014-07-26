@@ -4,7 +4,7 @@ var mongoose = require('mongoose'),
     moment = require('moment'),
     async = require('async');
 
-mongoose.set('debug', true);
+// mongoose.set('debug', true);
 
 function pegarOfertas(nome, date, callback) {
     date = moment();
