@@ -7,6 +7,9 @@ var mongoose = require('mongoose'),
 mongoose.set('debug', true);
 
 function pegarOfertas(nome, date, callback) {
+    date = moment();
+    date = date.subtract(10);
+
     console.log("Buscando por: " + nome);
     console.log("Com data maior que: " + date.format('L'));
 
@@ -26,9 +29,15 @@ function pegarOfertas(nome, date, callback) {
             $gte: gte
         }
     }).exec(function(err, output) {
+
+        console.log(output);
+        // console.log(output);
+
         var precos = _.map(output, function(o) {
             return o.preco;
         });
+
+        // console.log(precos);
 
         var media_inicial = 0;
         _.each(precos, function(preco) {
@@ -54,7 +63,7 @@ function pegarOfertas(nome, date, callback) {
         });
 
         total = (total / precos.length).toFixed(2);
-        console.log("Total: " + total);
+        // console.log("Total: " + total);
         callback(total);
     });
 }
@@ -116,14 +125,14 @@ exports.findNome = function(req, res) {
         },
 
     ], function(err, results) {
-
+        // console.log(results);
         var p = _.pluck(results[0], 'preco');
 
-        console.log(results[0]);
-        console.log((_.reduce(p, function(acc, num) {
+        // console.log(results[0]);
+        // console.log((_.reduce(p, function(acc, num) {
 
-            return acc + num;
-        }, 0) / results[0].length).toFixed(2));
+        //     return acc + num;
+        // }, 0) / results[0].length).toFixed(2));
 
 
         res.send({

@@ -5,6 +5,7 @@ var cheerio = require('cheerio');
 var async = require('async');
 var mongoose = require('mongoose');
 var date = require('date-utils');
+var Socks5ClientHttpAgent = require('socks5-http-client/lib/Agent');
 
 var url = 'mongodb://127.0.0.1:27017/olx-teste';
 mongoose.connect(url);
@@ -27,8 +28,9 @@ var Oferta = mongoose.model('Oferta', OfertaScheme);
 var fila = [];
 
 // Celulares e tabets:
-for (var i = 100; i < 200; i++) {
-    url = "http://riodejaneiro.olx.com.br/celulares-tablets-cat-830-p-" + i;
+for (var i = 1; i < 5; i++) {
+    // url = "http://riodejaneiro.olx.com.br/celulares-tablets-cat-830-p-" + i;
+    url = "http://riodejaneiro.olx.com.br/carros-motos-e-barcos-cat-362-p-" + i;
     console.log("Adicionando pagina a fila: " + url);
     fila.push(baixarPagina(i, url));
     // baixarPagina(i, url);
@@ -37,10 +39,12 @@ for (var i = 100; i < 200; i++) {
 async.series(fila);
 
 function baixarPagina(pagina, url) {
-    setTimeout(function() {
-
-        request(url, function(error, response, html) {
+    request({
+            url: url
+        },
+        function(error, response, html) {
             if (!error) {
+                console.log(html);
                 var $ = cheerio.load(html);
                 var produtos = [];
 
@@ -114,8 +118,9 @@ function baixarPagina(pagina, url) {
                     });
                     // produtos.push(json);
                 });
+            } else {
+                console.log("ERROR");
+                console.log(error);
             }
         });
-        console.log("Esperando 3 segundos");
-    }, 3000);
 }

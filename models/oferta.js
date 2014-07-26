@@ -1,15 +1,24 @@
 var mongoose = require('mongoose'),
-    Schema = mongoose.Schema,
-    textSearch = require('mongoose-text-search');
+    Schema = mongoose.Schema;
+// textSearch = require('mongoose-text-search');
 
 var OfertaScheme = mongoose.Schema({
+    id: String,
     titulo: String,
     preco: Number,
     categoria: String,
-    data: Date
+    data: Date,
+    url: String,
+    imagem: String
 });
 
-OfertaScheme.plugin(textSearch);
+OfertaScheme.index({
+    id: 1,
+    categoria: 1
+}, {
+    unique: true
+});
+
 OfertaScheme.index({
     titulo: 'text'
 });

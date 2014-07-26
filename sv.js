@@ -3,7 +3,7 @@ var mongoose = require('mongoose'),
     express = require('express'),
     path = require('path');
 
-var url = 'mongodb://127.0.0.1:27017/olx-teste';
+var url = 'mongodb://127.0.0.1:27017/olx';
 mongoose.connect(url);
 mongoose.set('debug', true);
 mongoose.connection.on('error', function(err) {
