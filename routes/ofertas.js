@@ -32,7 +32,7 @@ function pegarOfertas(nome, date, callback) {
             $lt: less,
             $gte: gte
         }
-    }).exec(function(err, output) {
+    }).limit(50).exec(function(err, output) {
         var media_inicial = 0;
 
         // Mapeia o array para conter apenas preços
