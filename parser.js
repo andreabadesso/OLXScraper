@@ -28,9 +28,14 @@ var Oferta = mongoose.model('Oferta', OfertaScheme);
 var fila = [];
 
 // Celulares e tabets:
+<<<<<<< HEAD
 for (var i = 1; i < 5; i++) {
     // url = "http://riodejaneiro.olx.com.br/celulares-tablets-cat-830-p-" + i;
     url = "http://riodejaneiro.olx.com.br/carros-motos-e-barcos-cat-362-p-" + i;
+=======
+for (var i = 160; i < 180; i++) {
+    url = "http://riodejaneiro.olx.com.br/celulares-tablets-cat-830-p-" + i;
+>>>>>>> 82514eb9bd9b51e7265a7ab8bb1292abfb5dd274
     console.log("Adicionando pagina a fila: " + url);
     fila.push(baixarPagina(i, url));
     // baixarPagina(i, url);
@@ -39,10 +44,18 @@ for (var i = 1; i < 5; i++) {
 async.series(fila);
 
 function baixarPagina(pagina, url) {
+<<<<<<< HEAD
     request({
             url: url
         },
         function(error, response, html) {
+=======
+    setTimeout(function() {
+
+        request(url, function(error, response, html) {
+		console.log(html === "");
+		return false;
+>>>>>>> 82514eb9bd9b51e7265a7ab8bb1292abfb5dd274
             if (!error) {
                 console.log(html);
                 var $ = cheerio.load(html);
@@ -123,4 +136,10 @@ function baixarPagina(pagina, url) {
                 console.log(error);
             }
         });
+<<<<<<< HEAD
 }
+=======
+        console.log("Esperando 3 segundos");
+    }, 3000);
+}
+>>>>>>> 82514eb9bd9b51e7265a7ab8bb1292abfb5dd274
