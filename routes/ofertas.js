@@ -30,9 +30,6 @@ function pegarOfertas(nome, date, callback) {
         }
     }).exec(function(err, output) {
 
-        console.log(output);
-        // console.log(output);
-
         var precos = _.map(output, function(o) {
             return o.preco;
         });
@@ -125,15 +122,7 @@ exports.findNome = function(req, res) {
         },
 
     ], function(err, results) {
-        // console.log(results);
         var p = _.pluck(results[0], 'preco');
-
-        // console.log(results[0]);
-        // console.log((_.reduce(p, function(acc, num) {
-
-        //     return acc + num;
-        // }, 0) / results[0].length).toFixed(2));
-
 
         res.send({
             sete: results[0],
