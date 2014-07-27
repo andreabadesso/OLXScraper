@@ -24,15 +24,15 @@ function pegarOfertas(nome, date, callback) {
     var gte = moment(date).subtract(3, 'days');
 
     Oferta.find({
-        titulo: {
-            $regex: ".*" + nome + ".*",
-            $options: 'i'
-        },
         data: {
             $lt: less,
             $gte: gte
+        },
+        titulo: {
+            $regex: ".*" + nome + ".*",
+            $options: 'i'
         }
-    }).limit(50).exec(function(err, output) {
+    }).exec(function(err, output) {
         var media_inicial = 0;
 
         // Mapeia o array para conter apenas preços
